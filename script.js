@@ -23,7 +23,8 @@ function draw() {
   // Background et pipes = méthode "sprite":
   // ctx.drawImage(sprite, sx, sy, sw, sh, dx, dy, dw, dh);
 
-  ctx.drawImage(sprite, 0, 0, 431, 970, 150, 100, 550, 1270);
+  // Background:
+  ctx.drawImage(sprite, 0, 0, 431, 970, 120, 0, 550, 1270);
   // sprite → l'image complète
   // 0, 0 → sx, sy → coin supérieur gauche de la découpe dans l’image
   // 431, 970 → sw, sh → largeur et hauteur de la découpe
@@ -33,7 +34,10 @@ function draw() {
   // TEST: ctx.drawImage(sprite, 0, 0, 100, 100, 0, 0, 100, 100);
 
   // Pipe down :
-  ctx.drawImage(sprite, 510, 0, 431, 970, 250, 518, 400, 970);
+  ctx.drawImage(sprite, 510, 0, 431, 970, 250, 418, 400, 970);
+  
+  // Pipe up:
+  ctx.drawImage(sprite, 432, 112, 77, 970, 450, 0, 72, 970);
 
   // Birds = méthode : découpés dans GIMP
   // ctx.drawImage(pipeBottom, 100, 483);
@@ -71,3 +75,5 @@ window.addEventListener("load", draw); //Bonne pratique : mettre tout dans une f
 // }
 
 // ----------------------------------------------------------------------------------------------------
+
+
