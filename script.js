@@ -27,10 +27,23 @@ let birdFrame = 0; // index de l'image actuelle (0, 1 ou 2)
 
 // Position fixe de l'oiseau au départ
 let birdX = -190; // position X initiale de l'oiseau
-let birdY = 100; // position Y initiale de l'oiseau
+// let birdY = 100; // position Y initiale de l'oiseau
 
 // Pour animation des battements d'aile de l'oiseau
 let frameCount = 0;
+
+// Mouvement de rebond de l'oiseau et gravité
+let birdY = 200;
+let velocity = 0;
+const gravity = 0.5;
+const jump = -8;
+
+// Contrôle de l'oiseau (attention, il faut lui changer ses coordonnées: c'est un élément dans un canva et non un élément du DOM):
+document.addEventListener("keydown", function (event) {
+  if (event.key === "ArrowUp") {
+    velocity = jump; // l’oiseau saute vers le haut
+  }
+});
 
 // BACKGROUND
 // Pour faire défiler le fond
@@ -40,7 +53,7 @@ const bgWidth = 550; // Largeur du fond (image d'arrière-plan)
 const canvasWidth = canvas.width; // Largeur du canvas (écran)
 
 // PIPES
-// Contrôle de l'espacement entre 2 tuyaux Up et Down
+// Contrôle de la position verticale aléatoire entre 2 tuyaux
 const pipeGap = 350; //  Espace entre les tuyaux haut et bas
 const totalPipeHeight = 800 + pipeGap + 100; // hauteur pipe haut + gap + pipe bas
 const minVisibleY = 0; // bord supérieur du canvas
@@ -151,6 +164,22 @@ function animate() {
 
   frameCount++;
 
+  // Gestion du mouvement de l'oiseau au keypress (du rebond et de la gravité)
+  velocity += gravity;
+  birdY += velocity;
+
+  // Empêche l'oiseau de sortir de l'écran par le bas
+  if (birdY > canvas.height - 50) {
+    birdY = canvas.height - 50;
+    velocity = 0;
+  }
+
+  // Empêche l'oiseau de sortir par le haut
+  // if (birdY < 0) {
+  //   birdY = 0;
+  //   velocity = 0;
+  // }
+
   requestAnimationFrame(animate); // on recommence l'animation = remplace setTimeout pour une animation plus fluide
 }
 
@@ -158,18 +187,6 @@ function animate() {
 sprite.onload = () => {
   requestAnimationFrame(animate);
 };
-
-// Contrôle de l'oiseau (attention, il faut lui changer ses coordonnées: c'est un élément dans un canva et non un élément du DOM):
-
-document.addEventListener("keydown", function (event) {
-  if (event.key === "ArrowUp") {
-    birdY -= 10;
-  } else if (event.key === "ArrowDown") {
-    event.preventDefault(); // empêche la console de remonter l’historique
-    birdY += 10;
-  }
-  draw(); // redessine après chaque mouvement
-});
 
 // -------------------------------------------------------------------------------------------------
 // CODE pour récupérer les coordonnées de l'image découpée dans "Page Ruler Redux":
