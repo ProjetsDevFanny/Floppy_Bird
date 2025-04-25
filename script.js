@@ -27,23 +27,32 @@ let birdFrame = 0; // index de l'image actuelle (0, 1 ou 2)
 
 // Position fixe de l'oiseau au départ
 let birdX = -190; // position X initiale de l'oiseau
-// let birdY = 100; // position Y initiale de l'oiseau
 
 // Pour animation des battements d'aile de l'oiseau
 let frameCount = 0;
 
 // Mouvement de rebond de l'oiseau et gravité
-let birdY = 200;
+let birdY = 100; // position Y initiale de l'oiseau
 let velocity = 0;
-const gravity = 0.5;
-const jump = -8;
+let gravity = 0.5;
+let jump = -8;
+let gameStarted = false;
 
 // Contrôle de l'oiseau (attention, il faut lui changer ses coordonnées: c'est un élément dans un canva et non un élément du DOM):
 document.addEventListener("keydown", function (event) {
+  if (gameOver) return; // Ne rien faire si le jeu est fini
+
+  if (!gameStarted) {
+    gameStarted = true; // Le jeu démarre à la première touche
+  }
   if (event.key === "ArrowUp") {
     velocity = jump; // l’oiseau saute vers le haut
   }
 });
+
+// Gestion de la collision bird/pipe
+const birdWidth = 40;
+const birdHeight = 34;
 
 // BACKGROUND
 // Pour faire défiler le fond
@@ -54,18 +63,13 @@ const canvasWidth = canvas.width; // Largeur du canvas (écran)
 
 // PIPES
 // Contrôle de la position verticale aléatoire entre 2 tuyaux
-const pipeGap = 350; //  Espace entre les tuyaux haut et bas
+const pipeGap = 250; //  Espace entre les tuyaux haut et bas
 const totalPipeHeight = 800 + pipeGap + 100; // hauteur pipe haut + gap + pipe bas
 const minVisibleY = 0; // bord supérieur du canvas
 const maxVisibleY = canvas.height;
 // Valeurs limites pour l’offset vertical
 const maxOffsetY = minVisibleY;
 const minOffsetY = maxVisibleY - totalPipeHeight;
-
-// Fonction pour générer des espacements aléatoire entre 2 tuyaux
-function getRandomOffsetY() {
-  return Math.floor(Math.random() * (maxOffsetY - minOffsetY + 1)) + minOffsetY;
-}
 
 // Valeurs constantes
 const pipeWidthUp = 72; // Largeur Pipe Up
@@ -82,6 +86,16 @@ const pipeGroups = [
   { x: canvas.width + pipeSpacing, offsetY: getRandomOffsetY() },
   { x: canvas.width + 2 * pipeSpacing, offsetY: getRandomOffsetY() },
 ];
+
+// Affichage page de gameOver
+let gameOver = false;
+
+// --------FONCTIONS UTILITAIRES--------------------------------
+
+// Fonction pour générer des espacements aléatoire entre 2 tuyaux
+function getRandomOffsetY() {
+  return Math.floor(Math.random() * (maxOffsetY - minOffsetY + 1)) + minOffsetY;
+}
 
 // FONCTION D'ANIMATION DES ELEMENTS DU JEU
 function animate() {
@@ -102,8 +116,8 @@ function animate() {
   // ctx.drawImage(sprite, 0, 0, 431, 970, 120, 0, 550, 1270);
 
   // BG qui défile : on dessine 2 fois l'image pour qu’elle boucle proprement
-  ctx.drawImage(sprite, 0, 0, 431, 970, bgX, 0, bgWidth, 1270); // première image
-  ctx.drawImage(sprite, 0, 0, 431, 970, bgX + bgWidth, 0, bgWidth, 1270); // deuxième image
+  ctx.drawImage(sprite, 0, 50, 431, 970, bgX, 0, bgWidth, 1270); // première image
+  ctx.drawImage(sprite, 0, 50, 431, 970, bgX + bgWidth, 0, bgWidth, 1270); // deuxième image
 
   // Mise à jour de la position du fond
   bgX -= vitesseBg; // déplace le fond vers la gauche
@@ -114,32 +128,66 @@ function animate() {
   // PIPES
   pipeGroups.forEach((group) => {
     const offset = group.offsetY;
+    const pipeX = group.x;
+    const birdHitboxX = birdX + 272;
+    const birdHitboxY = birdY + 369;
 
-    // Pipe Up (haut)
-    ctx.drawImage(
-      sprite,
-      432,
-      100,
-      77,
-      1070,
-      group.x,
-      0 + offset,
-      pipeWidthUp,
-      1070
-    );
+    if (!gameOver) {
+      // Collision avec pipe du haut
+      const collisionTop =
+        birdHitboxX + birdWidth > pipeX &&
+        birdHitboxX < pipeX + pipeWidthUp &&
+        birdHitboxY < -4 + offset + 490;
 
-    // Pipe Down (bas) — on ajoute pipeGap pour créer l’espace
-    ctx.drawImage(
-      sprite,
-      510,
-      -10,
-      631,
-      970,
-      group.x,
-      300 + offset + pipeGap,
-      pipeWidthDown,
-      970
-    );
+      // Collision avec pipe du bas
+      const collisionBottom =
+        birdHitboxX + birdWidth > pipeX &&
+        birdHitboxX < pipeX + (pipeWidthDown - 527) &&
+        birdHitboxY + birdHeight > 417 + offset + pipeGap;
+
+      if (collisionTop || collisionBottom) {
+        console.log("Collision !");
+        gameOver = true;
+        birdY = 50; // replacer l'oiseau au centre
+        birdX = -15; // replacer l'oiseau au centre
+        velocity = 0; // stoppe la gravité
+        gravity = 0;
+      }
+    }
+
+    // Efface les tuyaux à l'affichage de la page gameOver
+    if (!gameOver) {
+      // Pipe Up
+      ctx.drawImage(
+        sprite,
+        432,
+        100,
+        77,
+        1070,
+        group.x,
+        -2 + offset,
+        pipeWidthUp,
+        1070
+      );
+
+      // Pipe Down
+      ctx.drawImage(
+        sprite,
+        510,
+        -10,
+        631,
+        970,
+        group.x,
+        300 + offset + pipeGap,
+        pipeWidthDown,
+        970
+      );
+      // === DEBUG RECTANGLES POUR LES TUYAUX ===
+      // ctx.strokeStyle = "red"; // Tuyau du haut
+      // ctx.strokeRect(group.x, -4 + offset, pipeWidthUp, 490);
+      // ctx.strokeStyle = "black"; // Tuyau du bas
+      // ctx.strokeRect(group.x, 417 + offset + pipeGap, pipeWidthDown - 527, 950);
+    }
 
     // Déplacement vers la gauche
     group.x -= pipeSpeed;
@@ -161,24 +209,30 @@ function animate() {
     // % birdSprites.length : le modulo permet de revenir à 0 quand on atteint la fin.
   }
   ctx.drawImage(birdSprites[birdFrame], birdX, birdY);
+  // console.log(birdX, birdY, birdWidth, birdHeight); // Test
+
+  // === DEBUG RECTANGLE POUR L'OISEAU ===
+  // ctx.strokeStyle = "blue";
+  // ctx.strokeRect(birdX + 272, birdY + 369, birdWidth, birdHeight);
 
   frameCount++;
 
   // Gestion du mouvement de l'oiseau au keypress (du rebond et de la gravité)
-  velocity += gravity;
-  birdY += velocity;
-
-  // Empêche l'oiseau de sortir de l'écran par le bas
-  if (birdY > canvas.height - 50) {
-    birdY = canvas.height - 50;
-    velocity = 0;
+  if (gameStarted) {
+    velocity += gravity;
+    birdY += velocity;
   }
+  if (birdY > canvas.height - 50) {
+    console.log("tombé !");
 
-  // Empêche l'oiseau de sortir par le haut
-  // if (birdY < 0) {
-  //   birdY = 0;
-  //   velocity = 0;
-  // }
+    // Il est tombé on le remet au centre
+    // birdY = 200; //Position, verticale de départ
+    gameOver = true;
+    birdY = 50; // replacer l'oiseau au centre
+    birdX = -15; // replacer l'oiseau au centre
+    velocity = 0; //Réinitialisation de la vitesse
+    gameStarted = false; // On met le jeu en pause
+  }
 
   requestAnimationFrame(animate); // on recommence l'animation = remplace setTimeout pour une animation plus fluide
 }

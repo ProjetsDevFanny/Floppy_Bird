@@ -6,19 +6,23 @@ body {
   font-family: 'Press Start 2P', cursive;
   user-select: none;
   overflow: hidden;
-}
+  }
+
 header {
   margin: 0 auto;
-  width: 551px;
+  width: 751px;
 }
 h1 {
-  background: url(./media/flappy-bird-set.png) 0% 340px;
+  background: url(./media/background.png) 0% 420px;
+  /* background-position: center; */
+  background-size: cover; 
   padding: 1.2rem 0;
   margin: 0;
 }
 .score-container {
   display: flex;
   justify-content: space-between;
-  padding: 8px 6px;
+  padding: 15px 6px;
+  margin: 0px 100px 0px 101px;
   background: #5EE270;
 }
