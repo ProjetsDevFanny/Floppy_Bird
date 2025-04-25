@@ -44,6 +44,10 @@ document.addEventListener("keydown", function (event) {
 
   if (!gameStarted) {
     gameStarted = true; // Le jeu démarre à la première touche
+    // Lancer la musique de fond ici
+    bgMusic.play().catch((err) => {
+      console.warn("Impossible de lancer la musique :", err);
+    });
   }
   if (event.key === "ArrowUp") {
     velocity = jump; // l’oiseau saute vers le haut
@@ -97,6 +101,28 @@ function getRandomOffsetY() {
   return Math.floor(Math.random() * (maxOffsetY - minOffsetY + 1)) + minOffsetY;
 }
 
+// Fonction son lors d'un passage entre 2 tuyaux
+function ringWin() {
+  const audio = new Audio();
+  audio.src = "./media/win.mp3";
+  audio.play();
+}
+
+// Son lors d'un crash sur un tuyau
+const ringLoose = new Audio("./media/loose.mp3");
+ringLoose.volume = 0.6;
+
+// Son du jeu
+const bgMusic = new Audio("./media/game_sound.mp3");
+bgMusic.loop = true; // Pour que la musique tourne en boucle
+bgMusic.volume = 0.3; // Volume adapté pour une ambiance
+
+// Fonction AFFICHAGE DU SCORE
+let score = 0;
+function scoreDisplay() {
+  currentScore.textContent = `Score = ${score} points.`;
+}
+
 // FONCTION D'ANIMATION DES ELEMENTS DU JEU
 function animate() {
   // -------------------------------------------------------------
@@ -125,7 +151,8 @@ function animate() {
     bgX = 0; // réinitialisation de la position à 0 lorsque la première image est complètement sortie
   }
 
-  // PIPES
+  // DESSIN des PIPES et collision
+
   pipeGroups.forEach((group) => {
     const offset = group.offsetY;
     const pipeX = group.x;
@@ -146,12 +173,33 @@ function animate() {
         birdHitboxY + birdHeight > 417 + offset + pipeGap;
 
       if (collisionTop || collisionBottom) {
-        console.log("Collision !");
+        ringLoose.play();
         gameOver = true;
         birdY = 50; // replacer l'oiseau au centre
         birdX = -15; // replacer l'oiseau au centre
         velocity = 0; // stoppe la gravité
         gravity = 0;
+      }
+
+      // === DEBUG LIGNE DE FRANCHISSEMENT DES TUYAUX ===
+      // ctx.beginPath();
+      // ctx.moveTo(group.x + pipeWidthUp, 0); // en haut de l'écran
+      // ctx.lineTo(group.x + pipeWidthUp, canvas.height); // en bas
+      // ctx.strokeStyle = "purple";
+      // ctx.lineWidth = 1;
+      // ctx.stroke();
+
+      // GESTION DU SCORE LORS DU PASSAGE DE L'OISEAU
+      if (
+        !group.passed &&
+        birdX + 272 + birdWidth > group.x + pipeWidthUp &&
+        !gameOver //On vérifie que le jeu est bien fini ( = score ne bouge plus)
+      ) {
+        // l'oiseau est passé
+        score++;
+        group.passed = true;
+        scoreDisplay();
+        ringWin();
       }
     }
 
@@ -192,11 +240,12 @@ function animate() {
     // Déplacement vers la gauche
     group.x -= pipeSpeed;
 
-    // Recyclage du groupe de tuyaux
+    // Recyclage du groupe des tuyaux
     if (group.x <= -maxPipeWidth) {
       const maxX = Math.max(...pipeGroups.map((g) => g.x));
       group.x = maxX + pipeSpacing;
       group.offsetY = getRandomOffsetY(); // Nouvelle hauteur SEULEMENT lors du recyclage
+      group.passed = false; // ← ici c’est bon maintenant !
     }
   });
 
@@ -223,8 +272,6 @@ function animate() {
     birdY += velocity;
   }
   if (birdY > canvas.height - 50) {
-    console.log("tombé !");
-
     // Il est tombé on le remet au centre
     // birdY = 200; //Position, verticale de départ
     gameOver = true;

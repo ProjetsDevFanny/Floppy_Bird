@@ -21,8 +21,8 @@ h1 {
 }
 .score-container {
   display: flex;
-  justify-content: space-between;
-  padding: 15px 6px;
+  justify-content: center;
+  padding: 8px 6px;
   margin: 0px 100px 0px 101px;
   background: #5EE270;
 }
