@@ -6,6 +6,7 @@ body {
   font-family: 'Press Start 2P', cursive;
   user-select: none;
   overflow: hidden;
+  cursor: pointer;
   }
 
 header {
@@ -21,8 +22,9 @@ h1 {
 }
 .score-container {
   display: flex;
-  justify-content: center;
+  justify-content: space-around;
   padding: 8px 6px;
   margin: 0px 100px 0px 101px;
   background: #5EE270;
 }
+

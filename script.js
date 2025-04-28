@@ -34,29 +34,27 @@ let frameCount = 0;
 // Mouvement de rebond de l'oiseau et gravité
 let birdY = 100; // position Y initiale de l'oiseau
 let velocity = 0;
-let gravity = 0.5;
+let gravity = 0;
 let jump = -8;
-let gameStarted = false;
+let gameStartedClick = false;
+let gameStartedArrowUp = false;
 
-// Contrôle de l'oiseau (attention, il faut lui changer ses coordonnées: c'est un élément dans un canva et non un élément du DOM):
+// EVENT QUAND ON PRESS SUR LES FLECHES DU CLAVIER
 document.addEventListener("keydown", function (event) {
   if (gameOver) return; // Ne rien faire si le jeu est fini
 
-  if (!gameStarted) {
-    gameStarted = true; // Le jeu démarre à la première touche
-    // Lancer la musique de fond ici
-    bgMusic.play().catch((err) => {
-      console.warn("Impossible de lancer la musique :", err);
-    });
+  if (!gameStartedArrowUp) {
+    gameStartedArrowUp = true; // Le jeu démarre à la première touche
   }
   if (event.key === "ArrowUp") {
     velocity = jump; // l’oiseau saute vers le haut
+    gravity = 0.5; // on applique ensuite la gravité
   }
 });
 
-// Gestion de la collision bird/pipe
-const birdWidth = 40;
-const birdHeight = 34;
+// position bird
+const birdWidth = 20;
+const birdHeight = -15;
 
 // BACKGROUND
 // Pour faire défiler le fond
@@ -117,11 +115,82 @@ const bgMusic = new Audio("./media/game_sound.mp3");
 bgMusic.loop = true; // Pour que la musique tourne en boucle
 bgMusic.volume = 0.3; // Volume adapté pour une ambiance
 
-// Fonction AFFICHAGE DU SCORE
+// Fonction AFFICHAGE DU SCORE AU DE PAGE
 let score = 0;
 function scoreDisplay() {
-  currentScore.textContent = `Score = ${score} points.`;
+  bestScore.textContent = `Meilleur = ${score}`;
+  currentScore.textContent = `Actuel = ${score}`;
 }
+
+// EVENT: Lors du clic, démarre le jeu
+document.addEventListener("click", () => {
+  if (!gameStartedClick) {
+    gameStartedClick = true; // Marque le jeu comme démarré
+    bgMusic.play().catch((err) => {
+      console.warn("Impossible de lancer la musique :", err);
+    });
+    startGame(); // Fonction pour démarrer le jeu
+    console.log("jeu lancé!"); // TEST
+  }
+});
+
+// FONCTION DESSIN PAGE D'ACCUEIL, (PAGE GAMEOVER et RESTART)
+function drawWelcomePage() {
+  if (!gameStartedClick) {
+    // Animation de la page d'accueil
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // DEFILEMENT DU BACKGROUND
+
+    ctx.drawImage(sprite, 0, 50, 431, 970, bgX, 0, bgWidth, 1270); // première image
+    ctx.drawImage(sprite, 0, 50, 431, 970, bgX + bgWidth, 0, bgWidth, 1270); // deuxième image
+
+    bgX -= vitesseBg;
+    if (bgX <= -bgWidth) {
+      bgX = 0;
+    }
+
+    // BATTEMENT DES AILES DU BIRD:
+    if (frameCount % 2 === 0) {
+      birdFrame = (birdFrame + 1) % birdSprites.length; // Change d’image pour simuler un battement d’aile
+    }
+    ctx.drawImage(birdSprites[birdFrame], birdX, birdY);
+
+    // POSITIONNEMENT CENTRAL DE L'OISEAU
+    birdY = 20;
+    birdX = -15;
+
+    // DESSIN DU TEXTE
+    ctx.font = "1.2rem 'Press Start 2P', cursive"; // Définit la taille et le type de police
+    ctx.fillStyle = "black"; // couleur du texte
+    ctx.textAlign = "center"; // pour centrer horizontalement
+    ctx.fillText(
+      `Meilleur score = ${score}`,
+      canvas.width / 2,
+      canvas.height / 2 - 150
+    );
+    ctx.fillText(
+      "Cliquez pour jouer",
+      canvas.width / 2,
+      canvas.height / 2 + 100
+    );
+
+    frameCount++;
+
+    requestAnimationFrame(drawWelcomePage); // on recommence l'animation = remplace setTimeout pour une animation plus fluide
+  }
+}
+
+// Lancement de la page d'accueil
+function loadWelcomePage() {
+  sprite.onload = () => {
+    // Démarre l'animation de la page d'accueil
+    requestAnimationFrame(drawWelcomePage);
+  };
+}
+
+// Lancer la page d'accueil
+loadWelcomePage();
 
 // FONCTION D'ANIMATION DES ELEMENTS DU JEU
 function animate() {
@@ -175,7 +244,7 @@ function animate() {
       if (collisionTop || collisionBottom) {
         ringLoose.play();
         gameOver = true;
-        birdY = 50; // replacer l'oiseau au centre
+        birdY = 20; // replacer l'oiseau au centre
         birdX = -15; // replacer l'oiseau au centre
         velocity = 0; // stoppe la gravité
         gravity = 0;
@@ -245,7 +314,7 @@ function animate() {
       const maxX = Math.max(...pipeGroups.map((g) => g.x));
       group.x = maxX + pipeSpacing;
       group.offsetY = getRandomOffsetY(); // Nouvelle hauteur SEULEMENT lors du recyclage
-      group.passed = false; // ← ici c’est bon maintenant !
+      group.passed = false;
     }
   });
 
@@ -267,27 +336,49 @@ function animate() {
   frameCount++;
 
   // Gestion du mouvement de l'oiseau au keypress (du rebond et de la gravité)
-  if (gameStarted) {
-    velocity += gravity;
-    birdY += velocity;
+  // Contrôle de l'oiseau (attention, il faut lui changer ses coordonnées: c'est un élément dans un canva et non un élément du DOM):
+  if (gameStartedArrowUp) {
+    velocity += gravity; // La gravité ne s'applique que si le jeu a commencé
+    birdY += velocity; // Mouvement de l'oiseau (il tombe à cause de la gravité)
   }
+  // Si l'oiseau touche le sol
   if (birdY > canvas.height - 50) {
-    // Il est tombé on le remet au centre
-    // birdY = 200; //Position, verticale de départ
-    gameOver = true;
-    birdY = 50; // replacer l'oiseau au centre
-    birdX = -15; // replacer l'oiseau au centre
-    velocity = 0; //Réinitialisation de la vitesse
-    gameStarted = false; // On met le jeu en pause
+    birdY = canvas.height - 50;
+    velocity = 0; // Stoppe la vitesse verticale
+    gameOver = true; // Le jeu est terminé
   }
-
+  // Text explication pour commencer à jouer
+  // Si le jeu n'est pas encore démarré, afficher le texte
+  if (!gameStartedArrowUp) {
+    ctx.font = "1.2rem 'Press Start 2P', cursive"; // Définit la taille et le type de police
+    ctx.fillStyle = "black"; // couleur du texte
+    ctx.textAlign = "center"; // pour centrer horizontalement
+    ctx.font = "0.6rem 'Press Start 2P', cursive"; // Définit la taille et le type de police
+    ctx.fillText(
+      "Pressez sur ↑, pour commencer à faire voler l'oiseau.",
+      canvas.width / 2,
+      canvas.height / 2 + 100
+    );
+  }
   requestAnimationFrame(animate); // on recommence l'animation = remplace setTimeout pour une animation plus fluide
 }
 
-// Quand l’image sprite est prête, on lance l’animation
-sprite.onload = () => {
-  requestAnimationFrame(animate);
-};
+function startGame() {
+  // Initialisation et démarrage du jeu
+  // console.log("Démarrage du jeu..."); // TEST
+  sprite.onload = () => {
+    console.log("Image sprite chargée, lancement de l'animation.");
+    requestAnimationFrame(animate); // Démarre l'animation du jeu
+  };
+
+  // Vérification du chargement de l'image
+  if (sprite.complete) {
+    console.log("Image sprite déjà chargée");
+    requestAnimationFrame(animate);
+  } else {
+    console.log("En attente du chargement de l'image sprite");
+  }
+}
 
 // -------------------------------------------------------------------------------------------------
 // CODE pour récupérer les coordonnées de l'image découpée dans "Page Ruler Redux":
