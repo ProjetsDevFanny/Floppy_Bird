@@ -54,7 +54,7 @@ document.addEventListener("keydown", function (event) {
   }
 });
 
-// Taille d bird
+// Taille du bird
 const birdWidth = 42; // Largeur de la hitbox de l'oiseau
 const birdHeight = 30; // Hauteur de la hitbox de l'oiseau
 
