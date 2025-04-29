@@ -21,25 +21,24 @@ sprite.src = "./media/flappy-bird-set.png";
 // -------------------------------------------------------------------
 
 // BIRD
-// Les trois sprites de l'oiseau  : dans un tableau
+// BATTEMENT AILES DE L'OISEAU = 3 images de l'oiseau mises dans un tableau
 const birdSprites = [birdUp, birdMiddle, birdDown];
 let birdFrame = 0; // index de l'image actuelle (0, 1 ou 2)
 
 // Position fixe de l'oiseau au départ
-let birdX = -190; // position X initiale de l'oiseau
+let birdX = -90; // position X initiale de l'oiseau
 
-// Pour animation des battements d'aile de l'oiseau
-let frameCount = 0;
+let birdY = 100; // position Y initiale de l'oiseau
+let frameCount = 0; // Pour animation des battements d'aile de l'oiseau
 
 // Mouvement de rebond de l'oiseau et gravité
-let birdY = 100; // position Y initiale de l'oiseau
 let velocity = 0;
 let gravity = 0;
 let jump = -8;
 let gameStartedClick = false;
 let gameStartedArrowUp = false;
 
-// EVENT QUAND ON PRESS SUR LES FLECHES DU CLAVIER
+// COMMENCEMENT DU JEU QUAND ON PRESS SUR LA FLECHE HAUT DU CLAVIER
 document.addEventListener("keydown", function (event) {
   if (gameOver) return; // Ne rien faire si le jeu est fini
 
@@ -47,19 +46,22 @@ document.addEventListener("keydown", function (event) {
     gameStartedArrowUp = true; // Le jeu démarre à la première touche
   }
   if (event.key === "ArrowUp") {
-    velocity = jump; // l’oiseau saute vers le haut
+    velocity = jump; // l'oiseau saute vers le haut
     gravity = 0.5; // on applique ensuite la gravité
+  } else if (event.key === "ArrowDown") {
+    velocity = -(-2); // l'oiseau tombe
+    gravity = 0.5;
   }
 });
 
-// position bird
-const birdWidth = 20;
-const birdHeight = -15;
+// Taille d bird
+const birdWidth = 42; // Largeur de la hitbox de l'oiseau
+const birdHeight = 30; // Hauteur de la hitbox de l'oiseau
 
 // BACKGROUND
 // Pour faire défiler le fond
 let bgX = 0; // position du fond
-const vitesseBg = 2;
+const vitesseBg = 2; // Vitesse de défilement du fond
 const bgWidth = 550; // Largeur du fond (image d'arrière-plan)
 const canvasWidth = canvas.width; // Largeur du canvas (écran)
 
@@ -69,7 +71,7 @@ const pipeGap = 250; //  Espace entre les tuyaux haut et bas
 const totalPipeHeight = 800 + pipeGap + 100; // hauteur pipe haut + gap + pipe bas
 const minVisibleY = 0; // bord supérieur du canvas
 const maxVisibleY = canvas.height;
-// Valeurs limites pour l’offset vertical
+// Valeurs limites pour l'offset vertical
 const maxOffsetY = minVisibleY;
 const minOffsetY = maxVisibleY - totalPipeHeight;
 
@@ -78,11 +80,11 @@ const pipeWidthUp = 72; // Largeur Pipe Up
 const pipeWidthDown = 600; // Largeur du Pipe Down
 const pipeSpacing = 400; // Espace horizontal entre 2 groupes
 const pipeSpeed = 3; // vitesse de déplacement des pipes
-const maxPipeWidth = Math.max(pipeWidthDown, pipeWidthUp);
+const maxPipeWidth = Math.max(pipeWidthDown, pipeWidthUp); // Largeur maximale des tuyaux pour le recyclage
 
 // Création initiale des 3 groupes de tuyaux avec offsetY aléatoire (espacement aléatoire entre pipeUp et pipeDown)
-// pipeGroups est un tableau d’objets, et chaque objet représente un groupe de tuyaux (haut + bas).
-// Chaque objet a une propriété x, qui indique où il se trouve sur l’axe horizontal.
+// pipeGroups est un tableau d'objets, et chaque objet représente un groupe de tuyaux (haut + bas).
+// Chaque objet a une propriété x, qui indique où il se trouve sur l'axe horizontal.
 const pipeGroups = [
   { x: canvas.width, offsetY: getRandomOffsetY() },
   { x: canvas.width + pipeSpacing, offsetY: getRandomOffsetY() },
@@ -92,6 +94,9 @@ const pipeGroups = [
 // Affichage page de gameOver
 let gameOver = false;
 
+// Affichage de la page d'accueil ("welcome") ou du jeu "play"
+let gameState = "welcome";
+
 // --------FONCTIONS UTILITAIRES--------------------------------
 
 // Fonction pour générer des espacements aléatoire entre 2 tuyaux
@@ -99,7 +104,8 @@ function getRandomOffsetY() {
   return Math.floor(Math.random() * (maxOffsetY - minOffsetY + 1)) + minOffsetY;
 }
 
-// Fonction son lors d'un passage entre 2 tuyaux
+// FONCTIONS SONORES
+// Son lors d'un passage entre 2 tuyaux
 function ringWin() {
   const audio = new Audio();
   audio.src = "./media/win.mp3";
@@ -110,49 +116,54 @@ function ringWin() {
 const ringLoose = new Audio("./media/loose.mp3");
 ringLoose.volume = 0.6;
 
-// Son du jeu
+// Son ambiance du jeu
 const bgMusic = new Audio("./media/game_sound.mp3");
 bgMusic.loop = true; // Pour que la musique tourne en boucle
 bgMusic.volume = 0.3; // Volume adapté pour une ambiance
 
-// Fonction AFFICHAGE DU SCORE AU DE PAGE
+// Fonction AFFICHAGE DU SCORE HAUT DE PAGE
 let score = 0;
+let bestScore = 0; // Nouvelle variable pour stocker le meilleur score
 function scoreDisplay() {
-  bestScore.textContent = `Meilleur = ${score}`;
-  currentScore.textContent = `Actuel = ${score}`;
+  document.getElementById("bestScore").textContent = `Meilleur = ${bestScore}`;
+  document.getElementById("currentScore").textContent = `Actuel = ${score}`;
 }
 
 // EVENT: Lors du clic, démarre le jeu
 document.addEventListener("click", () => {
-  if (!gameStartedClick) {
-    gameStartedClick = true; // Marque le jeu comme démarré
+  if (gameState === "welcome") {
+    gameState = "play";
+    gameStartedClick = true;
+    gameStartedArrowUp = false; // Réinitialiser pour permettre de redémarrer avec la flèche
+    gameOver = false; // Réinitialiser l'état de gameOver
+    score = 0; // Réinitialiser le score
+    scoreDisplay(); // Mettre à jour l'affichage du score
+    // Position initiale de l'oiseau au démarrage du jeu
+    birdX = -150;
+    birdY = 30;
     bgMusic.play().catch((err) => {
       console.warn("Impossible de lancer la musique :", err);
     });
-    startGame(); // Fonction pour démarrer le jeu
-    console.log("jeu lancé!"); // TEST
+    console.log("jeu lancé!");
   }
 });
 
-// FONCTION DESSIN PAGE D'ACCUEIL, (PAGE GAMEOVER et RESTART)
-function drawWelcomePage() {
-  if (!gameStartedClick) {
-    // Animation de la page d'accueil
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+// FONCTION D'ANIMATION DES ELEMENTS DU JEU
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // DEFILEMENT DU BACKGROUND
+  // BACKGROUND qui défile
+  ctx.drawImage(sprite, 0, 50, 431, 970, bgX, 0, bgWidth, 1270);
+  ctx.drawImage(sprite, 0, 50, 431, 970, bgX + bgWidth, 0, bgWidth, 1270);
+  bgX -= vitesseBg;
+  if (bgX <= -bgWidth) {
+    bgX = 0;
+  }
 
-    ctx.drawImage(sprite, 0, 50, 431, 970, bgX, 0, bgWidth, 1270); // première image
-    ctx.drawImage(sprite, 0, 50, 431, 970, bgX + bgWidth, 0, bgWidth, 1270); // deuxième image
-
-    bgX -= vitesseBg;
-    if (bgX <= -bgWidth) {
-      bgX = 0;
-    }
-
+  if (gameState === "welcome") {
     // BATTEMENT DES AILES DU BIRD:
     if (frameCount % 2 === 0) {
-      birdFrame = (birdFrame + 1) % birdSprites.length; // Change d’image pour simuler un battement d’aile
+      birdFrame = (birdFrame + 1) % birdSprites.length;
     }
     ctx.drawImage(birdSprites[birdFrame], birdX, birdY);
 
@@ -161,11 +172,11 @@ function drawWelcomePage() {
     birdX = -15;
 
     // DESSIN DU TEXTE
-    ctx.font = "1.2rem 'Press Start 2P', cursive"; // Définit la taille et le type de police
-    ctx.fillStyle = "black"; // couleur du texte
-    ctx.textAlign = "center"; // pour centrer horizontalement
+    ctx.font = "1.2rem 'Press Start 2P', cursive";
+    ctx.fillStyle = "black";
+    ctx.textAlign = "center";
     ctx.fillText(
-      `Meilleur score = ${score}`,
+      `Meilleur score = ${bestScore}`,
       canvas.width / 2,
       canvas.height / 2 - 150
     );
@@ -174,195 +185,217 @@ function drawWelcomePage() {
       canvas.width / 2,
       canvas.height / 2 + 100
     );
+  } else if (gameState === "play") {
+    // DESSIN des PIPES et collision
+    pipeGroups.forEach((group) => {
+      const offset = group.offsetY;
+      const pipeX = group.x;
+      const birdHitboxX = birdX + 272; // TEST RECTANGLES POUR LA COLLISION
+      const birdHitboxY = birdY + 369; // TEST RECTANGLES POUR LA COLLISION
 
-    frameCount++;
+      if (!gameOver) {
+        // Collision avec pipe du haut
+        const collisionTop =
+          birdHitboxX + birdWidth > pipeX &&
+          birdHitboxX < pipeX + pipeWidthUp &&
+          birdHitboxY < -4 + offset + 490;
 
-    requestAnimationFrame(drawWelcomePage); // on recommence l'animation = remplace setTimeout pour une animation plus fluide
+        // Collision avec pipe du bas
+        const collisionBottom =
+          birdHitboxX + birdWidth > pipeX &&
+          birdHitboxX < pipeX + (pipeWidthDown - 527) &&
+          birdHitboxY + birdHeight > 417 + offset + pipeGap;
+
+        // QUAND ON RENTRE EN COLLISION
+        if (collisionTop || collisionBottom) {
+          ringLoose.play();
+          gameOver = true;
+          velocity = 0;
+          gravity = 0;
+
+          // Mise à jour du meilleur score
+          if (score > bestScore) {
+            bestScore = score;
+          }
+
+     
+
+          // Réinitialisation pour retourner à la page d'accueil
+          gameStartedClick = false;
+          gameStartedArrowUp = false;
+          gameState = "welcome";
+          // score = 0;
+          scoreDisplay();
+
+          // Réinitialisation des tuyaux
+          pipeGroups.forEach((group, index) => {
+            group.x = canvas.width + index * pipeSpacing;
+            group.offsetY = getRandomOffsetY();
+            group.passed = false;
+          });
+
+          // Réinitialisation de la position de l'oiseau
+          birdY = 20;
+          birdX = -15;
+          velocity = 0;
+          gravity = 0;
+        }
+
+             // === DEBUG LIGNE DE FRANCHISSEMENT DES TUYAUX ===
+            //  ctx.beginPath();
+            //  ctx.moveTo(group.x + pipeWidthUp, 0); // en haut de l'écran
+            //  ctx.lineTo(group.x + pipeWidthUp, canvas.height); // en bas
+            //  ctx.strokeStyle = "purple";
+            //  ctx.lineWidth = 1;
+            //  ctx.stroke();
+
+        // GESTION DU SCORE LORS DU PASSAGE DE L'OISEAU
+        if (
+          !group.passed &&
+          birdX + 272 + birdWidth > group.x + pipeWidthUp &&
+          !gameOver
+        ) {
+          score++;
+          group.passed = true;
+          scoreDisplay();
+          ringWin();
+        }
+      }
+
+      // Efface les tuyaux à l'affichage de la page gameOver
+      if (!gameOver) {
+        // Pipe Up
+        ctx.drawImage(
+          sprite,
+          432,
+          100,
+          77,
+          1070,
+          group.x,
+          -2 + offset,
+          pipeWidthUp,
+          1070
+        );
+
+        // Pipe Down
+        ctx.drawImage(
+          sprite,
+          510,
+          -10,
+          631,
+          970,
+          group.x,
+          300 + offset + pipeGap,
+          pipeWidthDown,
+          970
+        );
+        // //  === DEBUG RECTANGLES POUR LES TUYAUX ===
+        // ctx.strokeStyle = "red"; // Tuyau du haut
+        // ctx.strokeRect(group.x, -4 + offset, pipeWidthUp, 490);
+        // ctx.strokeStyle = "black"; // Tuyau du bas
+        // ctx.strokeRect(
+        //   group.x,
+        //   417 + offset + pipeGap,
+        //   pipeWidthDown - 527,
+        //   950
+        // );
+      }
+
+      // Déplacement vers la gauche
+      group.x -= pipeSpeed;
+
+      // Recyclage du groupe des tuyaux
+      if (group.x <= -maxPipeWidth) {
+        const maxX = Math.max(...pipeGroups.map((g) => g.x));
+        group.x = maxX + pipeSpacing;
+        group.offsetY = getRandomOffsetY();
+        group.passed = false;
+      }
+    });
+
+    // BIRD:
+    // Animation battement d'aile : toutes les 10 frames environ (~6 battements par seconde)
+    if (frameCount % 2 === 0) {
+      birdFrame = (birdFrame + 1) % birdSprites.length;
+    }
+    ctx.drawImage(birdSprites[birdFrame], birdX, birdY);
+
+    // === DEBUG RECTANGLE POUR L'OISEAU (position exacte) ===
+    // ctx.strokeStyle = "green";
+    // ctx.strokeRect(birdX, birdY, 42, 30);
+
+    // Gestion du mouvement de l'oiseau au keypress (du rebond et de la gravité)
+    if (gameStartedArrowUp) {
+      velocity += gravity;
+      birdY += velocity;
+    }
+    // === DEBUG RECTANGLE POUR L'OISEAU ===
+    ctx.strokeStyle = "blue";
+    // ctx.strokeRect(birdX + 272, birdY + 369, birdWidth, birdHeight);
+    ctx.strokeRect(birdX + 272, birdY + 369, 42, 30); // Dimensions ajustées pour correspondre à la taille visuelle de l'oiseau
+
+    // Si l'oiseau tombe
+    if (birdY > canvas.height - 50) {
+      birdY = canvas.height - 50;
+      velocity = 0;
+      gameOver = true;
+
+      // Mise à jour du meilleur score
+      if (score > bestScore) {
+        bestScore = score;
+      }
+
+      // Réinitialisation pour retourner à la page d'accueil
+      gameStartedClick = false;
+      gameStartedArrowUp = false;
+      gameState = "welcome";
+      // score = 0;
+      scoreDisplay();
+
+      // Réinitialisation des tuyaux
+      pipeGroups.forEach((group, index) => {
+        group.x = canvas.width + index * pipeSpacing;
+        group.offsetY = getRandomOffsetY();
+        group.passed = false;
+      });
+
+      // Réinitialisation de la position de l'oiseau
+      birdY = 20;
+      birdX = -15;
+      velocity = 0;
+      gravity = 0;
+    }
+
+    // Text explication pour commencer à jouer
+    if (!gameStartedArrowUp) {
+      ctx.font = "1.2rem 'Press Start 2P', cursive";
+      ctx.fillStyle = "black";
+      ctx.textAlign = "center";
+      ctx.font = "0.6rem 'Press Start 2P', cursive";
+      ctx.fillText(
+        "Pressez sur ↑ ou ↓ pour faire voler l'oiseau.",
+        canvas.width / 2,
+        canvas.height / 2 + 100
+      );
+    }
   }
+
+  frameCount++;
+  requestAnimationFrame(animate);
 }
 
 // Lancement de la page d'accueil
 function loadWelcomePage() {
   sprite.onload = () => {
     // Démarre l'animation de la page d'accueil
-    requestAnimationFrame(drawWelcomePage);
+    requestAnimationFrame(animate);
   };
 }
 
 // Lancer la page d'accueil
 loadWelcomePage();
 
-// FONCTION D'ANIMATION DES ELEMENTS DU JEU
-function animate() {
-  // -------------------------------------------------------------
-  // Explications pour méthode sprite :
-  // ctx.drawImage(sprite, sx, sy, sw, sh, dx, dy, dw, dh);
-  // sprite → l'image complète
-  // 0, 0 → sx, sy → coin supérieur gauche de la découpe dans l’image
-  // 431, 970 → sw, sh → largeur et hauteur de la découpe
-  // 150, 100 → position sur le canvas où tu veux coller l’image
-  // 550, 1270 → sw, sh → taille à afficher (identique à la découpe ici)
-  // TEST: ctx.drawImage(sprite, 0, 0, 100, 100, 0, 0, 100, 100);
-  // --------------------------------------------------------------
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height); // pour effacer avant de redessiner (sinon, supperposition d'images): clearRect(x, y, largeur, hauteur) : efface une zone rectangulaire du canvas.
-
-  // BACKGROUND
-  // ctx.drawImage(sprite, 0, 0, 431, 970, 120, 0, 550, 1270);
-
-  // BG qui défile : on dessine 2 fois l'image pour qu’elle boucle proprement
-  ctx.drawImage(sprite, 0, 50, 431, 970, bgX, 0, bgWidth, 1270); // première image
-  ctx.drawImage(sprite, 0, 50, 431, 970, bgX + bgWidth, 0, bgWidth, 1270); // deuxième image
-
-  // Mise à jour de la position du fond
-  bgX -= vitesseBg; // déplace le fond vers la gauche
-  if (bgX <= -bgWidth) {
-    bgX = 0; // réinitialisation de la position à 0 lorsque la première image est complètement sortie
-  }
-
-  // DESSIN des PIPES et collision
-
-  pipeGroups.forEach((group) => {
-    const offset = group.offsetY;
-    const pipeX = group.x;
-    const birdHitboxX = birdX + 272;
-    const birdHitboxY = birdY + 369;
-
-    if (!gameOver) {
-      // Collision avec pipe du haut
-      const collisionTop =
-        birdHitboxX + birdWidth > pipeX &&
-        birdHitboxX < pipeX + pipeWidthUp &&
-        birdHitboxY < -4 + offset + 490;
-
-      // Collision avec pipe du bas
-      const collisionBottom =
-        birdHitboxX + birdWidth > pipeX &&
-        birdHitboxX < pipeX + (pipeWidthDown - 527) &&
-        birdHitboxY + birdHeight > 417 + offset + pipeGap;
-
-      if (collisionTop || collisionBottom) {
-        ringLoose.play();
-        gameOver = true;
-        birdY = 20; // replacer l'oiseau au centre
-        birdX = -15; // replacer l'oiseau au centre
-        velocity = 0; // stoppe la gravité
-        gravity = 0;
-      }
-
-      // === DEBUG LIGNE DE FRANCHISSEMENT DES TUYAUX ===
-      // ctx.beginPath();
-      // ctx.moveTo(group.x + pipeWidthUp, 0); // en haut de l'écran
-      // ctx.lineTo(group.x + pipeWidthUp, canvas.height); // en bas
-      // ctx.strokeStyle = "purple";
-      // ctx.lineWidth = 1;
-      // ctx.stroke();
-
-      // GESTION DU SCORE LORS DU PASSAGE DE L'OISEAU
-      if (
-        !group.passed &&
-        birdX + 272 + birdWidth > group.x + pipeWidthUp &&
-        !gameOver //On vérifie que le jeu est bien fini ( = score ne bouge plus)
-      ) {
-        // l'oiseau est passé
-        score++;
-        group.passed = true;
-        scoreDisplay();
-        ringWin();
-      }
-    }
-
-    // Efface les tuyaux à l'affichage de la page gameOver
-    if (!gameOver) {
-      // Pipe Up
-      ctx.drawImage(
-        sprite,
-        432,
-        100,
-        77,
-        1070,
-        group.x,
-        -2 + offset,
-        pipeWidthUp,
-        1070
-      );
-
-      // Pipe Down
-      ctx.drawImage(
-        sprite,
-        510,
-        -10,
-        631,
-        970,
-        group.x,
-        300 + offset + pipeGap,
-        pipeWidthDown,
-        970
-      );
-      // === DEBUG RECTANGLES POUR LES TUYAUX ===
-      // ctx.strokeStyle = "red"; // Tuyau du haut
-      // ctx.strokeRect(group.x, -4 + offset, pipeWidthUp, 490);
-      // ctx.strokeStyle = "black"; // Tuyau du bas
-      // ctx.strokeRect(group.x, 417 + offset + pipeGap, pipeWidthDown - 527, 950);
-    }
-
-    // Déplacement vers la gauche
-    group.x -= pipeSpeed;
-
-    // Recyclage du groupe des tuyaux
-    if (group.x <= -maxPipeWidth) {
-      const maxX = Math.max(...pipeGroups.map((g) => g.x));
-      group.x = maxX + pipeSpacing;
-      group.offsetY = getRandomOffsetY(); // Nouvelle hauteur SEULEMENT lors du recyclage
-      group.passed = false;
-    }
-  });
-
-  // BIRD:
-  // Animation battement d’aile : toutes les 10 frames environ (~6 battements par seconde)(= pour ralentir les battements, sinon le navigateur (norme = 60 frames/ secondes) fait battre trop vite
-  if (frameCount % 2 === 0) {
-    birdFrame = (birdFrame + 1) % birdSprites.length; // Change d’image pour simuler un battement d’aile
-    // Explications:
-    // birdFrame + 1 : on passe à l’image suivante
-    // % birdSprites.length : le modulo permet de revenir à 0 quand on atteint la fin.
-  }
-  ctx.drawImage(birdSprites[birdFrame], birdX, birdY);
-  // console.log(birdX, birdY, birdWidth, birdHeight); // Test
-
-  // === DEBUG RECTANGLE POUR L'OISEAU ===
-  // ctx.strokeStyle = "blue";
-  // ctx.strokeRect(birdX + 272, birdY + 369, birdWidth, birdHeight);
-
-  frameCount++;
-
-  // Gestion du mouvement de l'oiseau au keypress (du rebond et de la gravité)
-  // Contrôle de l'oiseau (attention, il faut lui changer ses coordonnées: c'est un élément dans un canva et non un élément du DOM):
-  if (gameStartedArrowUp) {
-    velocity += gravity; // La gravité ne s'applique que si le jeu a commencé
-    birdY += velocity; // Mouvement de l'oiseau (il tombe à cause de la gravité)
-  }
-  // Si l'oiseau touche le sol
-  if (birdY > canvas.height - 50) {
-    birdY = canvas.height - 50;
-    velocity = 0; // Stoppe la vitesse verticale
-    gameOver = true; // Le jeu est terminé
-  }
-  // Text explication pour commencer à jouer
-  // Si le jeu n'est pas encore démarré, afficher le texte
-  if (!gameStartedArrowUp) {
-    ctx.font = "1.2rem 'Press Start 2P', cursive"; // Définit la taille et le type de police
-    ctx.fillStyle = "black"; // couleur du texte
-    ctx.textAlign = "center"; // pour centrer horizontalement
-    ctx.font = "0.6rem 'Press Start 2P', cursive"; // Définit la taille et le type de police
-    ctx.fillText(
-      "Pressez sur ↑, pour commencer à faire voler l'oiseau.",
-      canvas.width / 2,
-      canvas.height / 2 + 100
-    );
-  }
-  requestAnimationFrame(animate); // on recommence l'animation = remplace setTimeout pour une animation plus fluide
-}
-
+// Fonction de lancement du jeu
 function startGame() {
   // Initialisation et démarrage du jeu
   // console.log("Démarrage du jeu..."); // TEST

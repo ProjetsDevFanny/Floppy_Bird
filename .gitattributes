@@ -1,0 +1,8 @@
+# Force LF (Unix) pour tous les fichiers texte
+* text eol=lf
+
+# Force CRLF (Windows) pour les fichiers batch
+*.bat text eol=crlf
+
+# Force LF (Unix) pour les fichiers JavaScript
+*.js text eol=lf
