@@ -126,9 +126,16 @@ bgMusic.volume = 0.3; // Volume adapté pour une ambiance
 
 // Fonction AFFICHAGE DU SCORE HAUT DE PAGE
 let score = 0;
-let bestScore = 0; // Nouvelle variable pour stocker le meilleur score
+// On stocke le meilleur score dans le localStorage
+let bestScore = localStorage.getItem("bestScore") || 0;
+bestScore = parseInt(bestScore);
+// Initialisation de l'affichage du meilleur score
+document.getElementById("bestScore").textContent = `Meilleur = ${bestScore}`;
+document.getElementById("currentScore").textContent = `Actuel = ${score}`;
+
 function scoreDisplay() {
   document.getElementById("bestScore").textContent = `Meilleur = ${bestScore}`;
+  localStorage.setItem("bestScore", bestScore);
   document.getElementById("currentScore").textContent = `Actuel = ${score}`;
 }
 
@@ -219,6 +226,7 @@ function animate() {
           // Mise à jour du meilleur score
           if (score > bestScore) {
             bestScore = score;
+            localStorage.setItem("bestScore", bestScore);
           }
 
           // Réinitialisation pour retourner à la page d'accueil
@@ -345,6 +353,7 @@ function animate() {
       // Mise à jour du meilleur score
       if (score > bestScore) {
         bestScore = score;
+        localStorage.setItem("bestScore", bestScore);
       }
 
       // Réinitialisation pour retourner à la page d'accueil
