@@ -116,6 +116,9 @@ function ringWin() {
 const ringLoose = new Audio("./media/loose.mp3");
 ringLoose.volume = 0.6;
 
+const ringFall = new Audio("./media/falling2.mp3");
+ringFall.volume = 0.2;
+
 // Son ambiance du jeu
 const bgMusic = new Audio("./media/game_sound.mp3");
 bgMusic.loop = true; // Pour que la musique tourne en boucle
@@ -318,7 +321,7 @@ function animate() {
     }
     ctx.drawImage(birdSprites[birdFrame], birdX, birdY);
 
-    // === DEBUG RECTANGLE POUR L'OISEAU (position exacte) ===
+    // === DEBUG RECTANGLE POUR L'OISEAU (position exacte = ne fonctionne pas) ===
     // ctx.strokeStyle = "green";
     // ctx.strokeRect(birdX, birdY, 42, 30);
 
@@ -328,13 +331,14 @@ function animate() {
       birdY += velocity;
     }
     // === DEBUG RECTANGLE POUR L'OISEAU ===
-    ctx.strokeStyle = "blue";
-    // ctx.strokeRect(birdX + 272, birdY + 369, birdWidth, birdHeight);
-    ctx.strokeRect(birdX + 272, birdY + 369, 42, 30); // Dimensions ajustées pour correspondre à la taille visuelle de l'oiseau
+    // ctx.strokeStyle = "blue";
+    // // ctx.strokeRect(birdX + 272, birdY + 369, birdWidth, birdHeight);
+    // ctx.strokeRect(birdX + 272, birdY + 369, 42, 30); // Dimensions ajustées pour correspondre à la taille visuelle de l'oiseau
 
     // Si l'oiseau tombe
     if (birdY > canvas.height - 50) {
       birdY = canvas.height - 50;
+      ringFall.play();
       velocity = 0;
       gameOver = true;
 
