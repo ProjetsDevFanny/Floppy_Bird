@@ -218,8 +218,6 @@ function animate() {
             bestScore = score;
           }
 
-     
-
           // Réinitialisation pour retourner à la page d'accueil
           gameStartedClick = false;
           gameStartedArrowUp = false;
@@ -241,13 +239,13 @@ function animate() {
           gravity = 0;
         }
 
-             // === DEBUG LIGNE DE FRANCHISSEMENT DES TUYAUX ===
-            //  ctx.beginPath();
-            //  ctx.moveTo(group.x + pipeWidthUp, 0); // en haut de l'écran
-            //  ctx.lineTo(group.x + pipeWidthUp, canvas.height); // en bas
-            //  ctx.strokeStyle = "purple";
-            //  ctx.lineWidth = 1;
-            //  ctx.stroke();
+        // === DEBUG LIGNE DE FRANCHISSEMENT DES TUYAUX ===
+        //  ctx.beginPath();
+        //  ctx.moveTo(group.x + pipeWidthUp, 0); // en haut de l'écran
+        //  ctx.lineTo(group.x + pipeWidthUp, canvas.height); // en bas
+        //  ctx.strokeStyle = "purple";
+        //  ctx.lineWidth = 1;
+        //  ctx.stroke();
 
         // GESTION DU SCORE LORS DU PASSAGE DE L'OISEAU
         if (
