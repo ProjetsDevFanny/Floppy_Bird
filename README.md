@@ -25,7 +25,7 @@ Bienvenue dans ma version personnalisée de **Flappy Bird**, développée de A �
 
 ## Aperçu
 
-![Flappy Bird Preview](ScreenShotFloppyBird.png)
+![Flappy Bird Preview](Screen%20Shot_Floppy%20Bird.pdf)
 
 ## Demo animée
 
