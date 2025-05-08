@@ -14,7 +14,7 @@ Bienvenue dans ma version personnalisée de **Flappy Bird**, développée de A �
 - Gérer les ressources (sprites, sons)
 - Améliorer l’expérience utilisateur par des interactions fluides
 
-## 🧩 Fonctionnalités clés
+## Fonctionnalités clés
 
 - **Gameplay fluide** : contrôle à la souris (clic) ou au clavier (flèche haut/bas)
 - **Animation par sprites** : battement d’ailes de l’oiseau, fond défilant
@@ -23,7 +23,7 @@ Bienvenue dans ma version personnalisée de **Flappy Bird**, développée de A �
 - **Meilleur score sauvegardé** dans le localStorage
 - **Ambiance sonore** : fond musical + effets sonores personnalisés
 
-## 🖼️ Aperçu
+## Aperçu
 
 ![Flappy Bird Preview](./Capture_ecran_Floppy-Bird.png)
 
@@ -31,7 +31,7 @@ Bienvenue dans ma version personnalisée de **Flappy Bird**, développée de A �
 
 https://projetsdevfanny.github.io/Floppy_Bird/
 
-## 🚀 Lancer le jeu
+## Lancer le jeu
 
 1. Clone ce repo :
 
