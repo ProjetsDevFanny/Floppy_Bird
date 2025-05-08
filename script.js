@@ -15,19 +15,21 @@ birdMiddle.src = "./media/bird_middle.png";
 const birdUp = new Image();
 birdUp.src = "./media/bird_up.png";
 
-// Méthode2 = spritesheet (Pour bg et pipes )
+// Méthode2 = spritesheet (Pour background et pipes )
 const sprite = new Image();
 sprite.src = "./media/flappy-bird-set.png";
 // -------------------------------------------------------------------
 
-// BIRD
-// BATTEMENT AILES DE L'OISEAU = 3 images de l'oiseau mises dans un tableau
+// ---------------Variables -----------------
+
+// -------Variables pour l'OISEAU ----------
+
+// Battement des ailes de l'oiseau = 3 images de l'oiseau mises dans un tableau
 const birdSprites = [birdUp, birdMiddle, birdDown];
 let birdFrame = 0; // index de l'image actuelle (0, 1 ou 2)
 
 // Position fixe de l'oiseau au départ
 let birdX = -90; // position X initiale de l'oiseau
-
 let birdY = 100; // position Y initiale de l'oiseau
 let frameCount = 0; // Pour animation des battements d'aile de l'oiseau
 
@@ -35,37 +37,27 @@ let frameCount = 0; // Pour animation des battements d'aile de l'oiseau
 let velocity = 0;
 let gravity = 0;
 let jump = -8;
-let gameStartedClick = false;
-let gameStartedArrowUp = false;
 
-// COMMENCEMENT DU JEU QUAND ON PRESS SUR LA FLECHE HAUT DU CLAVIER
-document.addEventListener("keydown", function (event) {
-  if (gameOver) return; // Ne rien faire si le jeu est fini
+// Variables d'état du jeu
+let gameStartedClick = false; // gameStartedClick = true si le jeu a été lancé par un clic
+let gameStartedArrowUp = false; // gameStartedArrowUp = true si le jeu a été lancé par la flèche du haut
+let gameOver = false; // gameOver = true si le jeu est terminé
+let gameState = "welcome"; // gameState = "welcome" si le jeu n'a pas encore commencé, gameState = "play" si le jeu est en cours
 
-  if (!gameStartedArrowUp) {
-    gameStartedArrowUp = true; // Le jeu démarre à la première touche
-  }
-  if (event.key === "ArrowUp") {
-    velocity = jump; // l'oiseau saute vers le haut
-    gravity = 0.5; // on applique ensuite la gravité
-  } else if (event.key === "ArrowDown") {
-    velocity = -(-2); // l'oiseau tombe
-    gravity = 0.5;
-  }
-});
+// Taille de l'oiseau
+const birdWidth = 42;
+const birdHeight = 30;
 
-// Taille du bird
-const birdWidth = 42; // Largeur de la hitbox de l'oiseau
-const birdHeight = 30; // Hauteur de la hitbox de l'oiseau
+// --------------- Variables pour le FOND------------
 
-// BACKGROUND
 // Pour faire défiler le fond
 let bgX = 0; // position du fond
 const vitesseBg = 2; // Vitesse de défilement du fond
 const bgWidth = 550; // Largeur du fond (image d'arrière-plan)
 const canvasWidth = canvas.width; // Largeur du canvas (écran)
 
-// PIPES
+// ------------ Variables pour les TUYAUX-------------
+
 // Contrôle de la position verticale aléatoire entre 2 tuyaux
 const pipeGap = 250; //  Espace entre les tuyaux haut et bas
 const totalPipeHeight = 800 + pipeGap + 100; // hauteur pipe haut + gap + pipe bas
@@ -75,7 +67,6 @@ const maxVisibleY = canvas.height;
 const maxOffsetY = minVisibleY;
 const minOffsetY = maxVisibleY - totalPipeHeight;
 
-// Valeurs constantes
 const pipeWidthUp = 72; // Largeur Pipe Up
 const pipeWidthDown = 600; // Largeur du Pipe Down
 const pipeSpacing = 400; // Espace horizontal entre 2 groupes
@@ -91,56 +82,36 @@ const pipeGroups = [
   { x: canvas.width + 2 * pipeSpacing, offsetY: getRandomOffsetY() },
 ];
 
-// Affichage page de gameOver
-let gameOver = false;
+// ----------------Variables pour le score-----------------
 
-// Affichage de la page d'accueil ("welcome") ou du jeu "play"
-let gameState = "welcome";
+let score = 0;
+let bestScore = localStorage.getItem("bestScore") || 0; // On stocke le meilleur score dans le localStorage
+bestScore = parseInt(bestScore); // Initialisation de l'affichage du meilleur score
 
-// --------FONCTIONS UTILITAIRES--------------------------------
+//--------------------Variables SONORES---------------------
 
-// Fonction pour générer des espacements aléatoire entre 2 tuyaux
-function getRandomOffsetY() {
-  return Math.floor(Math.random() * (maxOffsetY - minOffsetY + 1)) + minOffsetY;
-}
-
-// FONCTIONS SONORES
 // Son lors d'un passage entre 2 tuyaux
-function ringWin() {
-  const audio = new Audio();
-  audio.src = "./media/win.mp3";
-  audio.play();
-}
+const ringWin = new Audio("./media/win.mp3");
+ringWin.volume = 0.5;
 
 // Son lors d'un crash sur un tuyau
 const ringLoose = new Audio("./media/loose.mp3");
 ringLoose.volume = 0.6;
 
+// Son lors de la chute de l'oiseau
 const ringFall = new Audio("./media/falling2.mp3");
 ringFall.volume = 0.2;
 
-// Son ambiance du jeu
+// Son de l'ambiance du jeu
 const bgMusic = new Audio("./media/game_sound.mp3");
 bgMusic.loop = true; // Pour que la musique tourne en boucle
 bgMusic.volume = 0.3; // Volume adapté pour une ambiance
 
-// Fonction AFFICHAGE DU SCORE HAUT DE PAGE
-let score = 0;
-// On stocke le meilleur score dans le localStorage
-let bestScore = localStorage.getItem("bestScore") || 0;
-bestScore = parseInt(bestScore);
-// Initialisation de l'affichage du meilleur score
-document.getElementById("bestScore").textContent = `Meilleur = ${bestScore}`;
-document.getElementById("currentScore").textContent = `Actuel = ${score}`;
+//--------------------------EVENTSLISTENERS-----------------------------------
 
-function scoreDisplay() {
-  document.getElementById("bestScore").textContent = `Meilleur = ${bestScore}`;
-  localStorage.setItem("bestScore", bestScore);
-  document.getElementById("currentScore").textContent = `Actuel = ${score}`;
-}
-
-// EVENT: Lors du clic, démarre le jeu
+// Passage à l'écran du jeu, au clic sur la page d'accueil
 document.addEventListener("click", () => {
+  console.log("jeu lancé!");
   if (gameState === "welcome") {
     gameState = "play";
     gameStartedClick = true;
@@ -158,11 +129,44 @@ document.addEventListener("click", () => {
   }
 });
 
-// FONCTION D'ANIMATION DES ELEMENTS DU JEU
+// Commencement du jeu, quand on appuie sur la flèche du haut ou sur la flèche du bas
+document.addEventListener("keydown", function (event) {
+  if (gameOver) return; // Ne rien faire si le jeu est fini
+
+  if (!gameStartedArrowUp) {
+    gameStartedArrowUp = true; // Le jeu démarre à la première touche
+  }
+  if (event.key === "ArrowUp") {
+    velocity = jump; // l'oiseau saute vers le haut
+    gravity = 0.5; // on applique ensuite la gravité
+  } else if (event.key === "ArrowDown") {
+    velocity = -(-2); // l'oiseau tombe
+    gravity = 0.5;
+  }
+});
+
+// --------FONCTIONS UTILITAIRES--------------------------------
+
+// Fonction pour générer des espacements aléatoire entre 2 tuyaux
+function getRandomOffsetY() {
+  return Math.floor(Math.random() * (maxOffsetY - minOffsetY + 1)) + minOffsetY;
+}
+
+// Fonction pour afficher le score
+// et le meilleur score sur la page d'accueil
+function scoreDisplay() {
+  document.getElementById("bestScore").textContent = `Meilleur = ${bestScore}`;
+  localStorage.setItem("bestScore", bestScore);
+  document.getElementById("currentScore").textContent = `Actuel = ${score}`;
+}
+
+// ------FONCTION PRINCIPALE: ANIMATION DES ELEMENTS DU JEU----------------
 function animate() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // BACKGROUND qui défile
+  // -----Page d'accueil affichée-----
+
+  // Defilement du fond
   ctx.drawImage(sprite, 0, 50, 431, 970, bgX, 0, bgWidth, 1270);
   ctx.drawImage(sprite, 0, 50, 431, 970, bgX + bgWidth, 0, bgWidth, 1270);
   bgX -= vitesseBg;
@@ -170,18 +174,18 @@ function animate() {
     bgX = 0;
   }
 
+  // Battement des ailes de l'oiseau
   if (gameState === "welcome") {
-    // BATTEMENT DES AILES DU BIRD:
     if (frameCount % 2 === 0) {
       birdFrame = (birdFrame + 1) % birdSprites.length;
     }
     ctx.drawImage(birdSprites[birdFrame], birdX, birdY);
 
-    // POSITIONNEMENT CENTRAL DE L'OISEAU
+    // Positionnement central de l'oiseau
     birdY = 20;
     birdX = -15;
 
-    // DESSIN DU TEXTE
+    // Dessin du texte de la page d'accueil
     ctx.font = "1.2rem 'Press Start 2P', cursive";
     ctx.fillStyle = "black";
     ctx.textAlign = "center";
@@ -195,14 +199,16 @@ function animate() {
       canvas.width / 2,
       canvas.height / 2 + 100
     );
+
+    // ---On commence le jeu = dessin et positionnement des tuyaux-------
   } else if (gameState === "play") {
-    // DESSIN des PIPES et collision
     pipeGroups.forEach((group) => {
       const offset = group.offsetY;
       const pipeX = group.x;
-      const birdHitboxX = birdX + 272; // TEST RECTANGLES POUR LA COLLISION
-      const birdHitboxY = birdY + 369; // TEST RECTANGLES POUR LA COLLISION
+      const birdHitboxX = birdX + 272; // Hitboxes tests pour la collision
+      const birdHitboxY = birdY + 369; // Hitboxes tests pour la collision
 
+      // Collision de l'oiseau avec les tuyaux
       if (!gameOver) {
         // Collision avec pipe du haut
         const collisionTop =
@@ -216,7 +222,7 @@ function animate() {
           birdHitboxX < pipeX + (pipeWidthDown - 527) &&
           birdHitboxY + birdHeight > 417 + offset + pipeGap;
 
-        // QUAND ON RENTRE EN COLLISION
+        // Lorsque l'oiseau touche un tuyau
         if (collisionTop || collisionBottom) {
           ringLoose.play();
           gameOver = true;
@@ -229,11 +235,12 @@ function animate() {
             localStorage.setItem("bestScore", bestScore);
           }
 
-          // Réinitialisation pour retourner à la page d'accueil
+          // -------Réinitialisation pour retourner à la page d'accueil (après une collision)------
+
+          // Réinitialisation de l'état du jeu
           gameStartedClick = false;
           gameStartedArrowUp = false;
           gameState = "welcome";
-          // score = 0;
           scoreDisplay();
 
           // Réinitialisation des tuyaux
@@ -250,15 +257,7 @@ function animate() {
           gravity = 0;
         }
 
-        // === DEBUG LIGNE DE FRANCHISSEMENT DES TUYAUX ===
-        //  ctx.beginPath();
-        //  ctx.moveTo(group.x + pipeWidthUp, 0); // en haut de l'écran
-        //  ctx.lineTo(group.x + pipeWidthUp, canvas.height); // en bas
-        //  ctx.strokeStyle = "purple";
-        //  ctx.lineWidth = 1;
-        //  ctx.stroke();
-
-        // GESTION DU SCORE LORS DU PASSAGE DE L'OISEAU
+        // Augmentation du score lors du passage de l'oiseau entre 2 tuyaux
         if (
           !group.passed &&
           birdX + 272 + birdWidth > group.x + pipeWidthUp &&
@@ -267,11 +266,19 @@ function animate() {
           score++;
           group.passed = true;
           scoreDisplay();
-          ringWin();
+          ringWin.play();
         }
+
+        // === DEBUG POUR VISUALISER LA LIGNE DE FRANCHISSEMENT DES TUYAUX ===
+        //  ctx.beginPath();
+        //  ctx.moveTo(group.x + pipeWidthUp, 0); // en haut de l'écran
+        //  ctx.lineTo(group.x + pipeWidthUp, canvas.height); // en bas
+        //  ctx.strokeStyle = "purple";
+        //  ctx.lineWidth = 1;
+        //  ctx.stroke();
       }
 
-      // Efface les tuyaux à l'affichage de la page gameOver
+      // Efface les tuyaux à l'affichage de la page d'accueil / ou affiche les tuyaux au commencement du jeu
       if (!gameOver) {
         // Pipe Up
         ctx.drawImage(
@@ -298,19 +305,22 @@ function animate() {
           pipeWidthDown,
           970
         );
-        // //  === DEBUG RECTANGLES POUR LES TUYAUX ===
-        // ctx.strokeStyle = "red"; // Tuyau du haut
-        // ctx.strokeRect(group.x, -4 + offset, pipeWidthUp, 490);
-        // ctx.strokeStyle = "black"; // Tuyau du bas
-        // ctx.strokeRect(
-        //   group.x,
-        //   417 + offset + pipeGap,
-        //   pipeWidthDown - 527,
-        //   950
-        // );
       }
 
-      // Déplacement vers la gauche
+      // //  === DEBUG POUR VISUALISER LES TUYAUX (utilisée pour gèrer la collision)
+      // ctx.strokeStyle = "red"; // Tuyau du haut
+      // ctx.strokeRect(group.x, -4 + offset, pipeWidthUp, 490);
+      // ctx.strokeStyle = "black"; // Tuyau du bas
+      // ctx.strokeRect(
+      //   group.x,
+      //   417 + offset + pipeGap,
+      //   pipeWidthDown - 527,
+      //   950
+      // );
+
+      // Gestion du déplacement des tuyaux
+
+      // Déplacement des tuyaux vers la gauche
       group.x -= pipeSpeed;
 
       // Recyclage du groupe des tuyaux
@@ -322,23 +332,20 @@ function animate() {
       }
     });
 
-    // BIRD:
+    // Gestion de l'animation de l'oiseau
+
     // Animation battement d'aile : toutes les 10 frames environ (~6 battements par seconde)
     if (frameCount % 2 === 0) {
       birdFrame = (birdFrame + 1) % birdSprites.length;
     }
     ctx.drawImage(birdSprites[birdFrame], birdX, birdY);
 
-    // === DEBUG RECTANGLE POUR L'OISEAU (position exacte = ne fonctionne pas) ===
-    // ctx.strokeStyle = "green";
-    // ctx.strokeRect(birdX, birdY, 42, 30);
-
     // Gestion du mouvement de l'oiseau au keypress (du rebond et de la gravité)
     if (gameStartedArrowUp) {
       velocity += gravity;
       birdY += velocity;
     }
-    // === DEBUG RECTANGLE POUR L'OISEAU ===
+    // === DEBUG RECTANGLE POUR L'OISEAU (utilisée pour gèrer la collision)===
     // ctx.strokeStyle = "blue";
     // // ctx.strokeRect(birdX + 272, birdY + 369, birdWidth, birdHeight);
     // ctx.strokeRect(birdX + 272, birdY + 369, 42, 30); // Dimensions ajustées pour correspondre à la taille visuelle de l'oiseau
@@ -356,7 +363,9 @@ function animate() {
         localStorage.setItem("bestScore", bestScore);
       }
 
-      // Réinitialisation pour retourner à la page d'accueil
+      // -----Rénitialisation pour retourner à la page d'accueil (après chute de l'oiseau)------
+
+      // Réinitialisation de l'état du jeu
       gameStartedClick = false;
       gameStartedArrowUp = false;
       gameState = "welcome";
@@ -377,7 +386,7 @@ function animate() {
       gravity = 0;
     }
 
-    // Text explication pour commencer à jouer
+    // Affichage du texte d'explication pour commencer à jouer (en bas de la page de jeu)
     if (!gameStartedArrowUp) {
       ctx.font = "1.2rem 'Press Start 2P', cursive";
       ctx.fillStyle = "black";
@@ -398,12 +407,15 @@ function animate() {
 // Lancement de la page d'accueil
 function loadWelcomePage() {
   sprite.onload = () => {
-    // Démarre l'animation de la page d'accueil
+    // Démarre l'animation de la page d'accueil puis du jeu
+    // console.log("Image sprite chargée, lancement de l'animation.");
     requestAnimationFrame(animate);
   };
 }
 
-// Lancer la page d'accueil
+// -----FONCTION DE LANCEMENT DU JEU----------------
+
+// Lancement de la page d'accueil
 loadWelcomePage();
 
 // Fonction de lancement du jeu
@@ -423,24 +435,3 @@ function startGame() {
     console.log("En attente du chargement de l'image sprite");
   }
 }
-
-// -------------------------------------------------------------------------------------------------
-// CODE pour récupérer les coordonnées de l'image découpée dans "Page Ruler Redux":
-// (à copier dans la console directement):
-
-// const box = document.querySelector('.rulermode-rectangle');
-// if (box) {
-//   const style = window.getComputedStyle(box);
-//   const data = {
-//     sy: parseInt(style.top),
-//     sx: parseInt(style.left),
-//     sw: parseInt(style.width),
-//     sh: parseInt(style.height)
-//   };
-//   console.log('Coordonnées :', data);
-//   copy(data); // Copie dans le presse-papiers (Chrome uniquement)
-// } else {
-//   console.log('Aucune sélection trouvée.');
-// }
-
-// ----------------------------------------------------------------------------------------------------
