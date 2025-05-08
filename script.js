@@ -1,10 +1,11 @@
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d"); //  On lui donne un contexte en 2D:
+// ----------------DEFINITION DU CONTEXTE CANVAS 2D-----
 
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
 // canvas.style.border = "1px solid #000"; // Visualisation des limites pour débugger visuellement
 
-// --------------------------------------------------------------
-// Chargement des images
+// ---------------CHARGEMENT DES IMAGES--------------------
+
 // Méthode 1 = découpe dans GIMP (pour bird)
 const birdDown = new Image();
 birdDown.src = "./media/bird_down.png";
@@ -15,12 +16,11 @@ birdMiddle.src = "./media/bird_middle.png";
 const birdUp = new Image();
 birdUp.src = "./media/bird_up.png";
 
-// Méthode2 = spritesheet (Pour background et pipes )
+// Méthode2 = spritesheet (Pour le fond et les tuyaux) )
 const sprite = new Image();
 sprite.src = "./media/flappy-bird-set.png";
-// -------------------------------------------------------------------
 
-// ---------------Variables -----------------
+// ---------------VARIABLES -----------------
 
 // -------Variables pour l'OISEAU ----------
 
@@ -145,7 +145,7 @@ document.addEventListener("keydown", function (event) {
   }
 });
 
-// --------FONCTIONS UTILITAIRES--------------------------------
+// ---------------FONCTIONS UTILITAIRES--------------------------------
 
 // Fonction pour générer des espacements aléatoire entre 2 tuyaux
 function getRandomOffsetY() {
@@ -161,6 +161,7 @@ function scoreDisplay() {
 }
 
 // ------FONCTION PRINCIPALE: ANIMATION DES ELEMENTS DU JEU----------------
+
 function animate() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -257,7 +258,7 @@ function animate() {
           gravity = 0;
         }
 
-        // Augmentation du score lors du passage de l'oiseau entre 2 tuyaux
+        // ------Augmentation du score lors du passage de l'oiseau entre 2 tuyaux------
         if (
           !group.passed &&
           birdX + 272 + birdWidth > group.x + pipeWidthUp &&
@@ -269,7 +270,7 @@ function animate() {
           ringWin.play();
         }
 
-        // === DEBUG POUR VISUALISER LA LIGNE DE FRANCHISSEMENT DES TUYAUX ===
+        // === DESSINS D'UNE LIGNE POUR VISUALISER LA LIMITE DE FRANCHISSEMENT DES TUYAUX (pour l'augmentation des points) ===
         //  ctx.beginPath();
         //  ctx.moveTo(group.x + pipeWidthUp, 0); // en haut de l'écran
         //  ctx.lineTo(group.x + pipeWidthUp, canvas.height); // en bas
@@ -278,7 +279,7 @@ function animate() {
         //  ctx.stroke();
       }
 
-      // Efface les tuyaux à l'affichage de la page d'accueil / ou affiche les tuyaux au commencement du jeu
+      // -----Efface les tuyaux à l'affichage de la page d'accueil / ou affiche les tuyaux au commencement du jeu
       if (!gameOver) {
         // Pipe Up
         ctx.drawImage(
@@ -307,7 +308,7 @@ function animate() {
         );
       }
 
-      // //  === DEBUG POUR VISUALISER LES TUYAUX (utilisée pour gèrer la collision)
+      // //  === DESSINS DE RECTANGLES POUR DELIMITER LES TUYAUX (utilisée pour gèrer la collision)
       // ctx.strokeStyle = "red"; // Tuyau du haut
       // ctx.strokeRect(group.x, -4 + offset, pipeWidthUp, 490);
       // ctx.strokeStyle = "black"; // Tuyau du bas
@@ -318,8 +319,7 @@ function animate() {
       //   950
       // );
 
-      // Gestion du déplacement des tuyaux
-
+      // -------------Gestion du déplacement des tuyaux-------
       // Déplacement des tuyaux vers la gauche
       group.x -= pipeSpeed;
 
@@ -332,7 +332,7 @@ function animate() {
       }
     });
 
-    // Gestion de l'animation de l'oiseau
+    // ----------------Gestion de l'animation de l'oiseau----------
 
     // Animation battement d'aile : toutes les 10 frames environ (~6 battements par seconde)
     if (frameCount % 2 === 0) {
@@ -345,7 +345,7 @@ function animate() {
       velocity += gravity;
       birdY += velocity;
     }
-    // === DEBUG RECTANGLE POUR L'OISEAU (utilisée pour gèrer la collision)===
+    // === DESSIN D'UN RECTANGLE POUR DELIMITER L'OISEAU (utilisée pour gèrer la collision)===
     // ctx.strokeStyle = "blue";
     // // ctx.strokeRect(birdX + 272, birdY + 369, birdWidth, birdHeight);
     // ctx.strokeRect(birdX + 272, birdY + 369, 42, 30); // Dimensions ajustées pour correspondre à la taille visuelle de l'oiseau
@@ -386,7 +386,7 @@ function animate() {
       gravity = 0;
     }
 
-    // Affichage du texte d'explication pour commencer à jouer (en bas de la page de jeu)
+    // ---------Affichage du texte d'explication pour commencer à jouer (en bas de la page de jeu)---------
     if (!gameStartedArrowUp) {
       ctx.font = "1.2rem 'Press Start 2P', cursive";
       ctx.fillStyle = "black";
@@ -404,7 +404,9 @@ function animate() {
   requestAnimationFrame(animate);
 }
 
-// Lancement de la page d'accueil
+// -----FONCTION DE LANCEMENT DU JEU----------------
+
+// Fonction de la page d'accueil
 function loadWelcomePage() {
   sprite.onload = () => {
     // Démarre l'animation de la page d'accueil puis du jeu
@@ -412,8 +414,6 @@ function loadWelcomePage() {
     requestAnimationFrame(animate);
   };
 }
-
-// -----FONCTION DE LANCEMENT DU JEU----------------
 
 // Lancement de la page d'accueil
 loadWelcomePage();
